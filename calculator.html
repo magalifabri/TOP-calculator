@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="stylesheet" type="text/css" href="calculator.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+<body>
+	<div id="calculator">
+		<div id="screen"></div>
+		<div id="buttons-digits">
+			<button id="7">7</button>
+			<button id="8">8</button>
+			<button id="9">9</button>
+			<button id="4">4</button>
+			<button id="5">5</button>
+			<button id="6">6</button>
+			<button id="1">1</button>
+			<button id="2">2</button>
+			<button id="3">3</button>
+			<button id="0">0</button>
+			<button id=".">.</button>
+			<button id="=">=</button>
+		</div>
+		<div id="buttons-other">
+			<button id="clear"><<</button>
+			<button id="÷">÷</button>
+			<button id="x">x</button>
+			<button id="-">-</button>
+			<button id="+">+</button>
+		</div>
+	</div>
+
+	<script>
+		// ------------------ MATH OPERATIONS ---------------------
+		function add(a, b) {
+			return (a + b);
+		}
+		function subtract(a, b) {
+			return (a - b);
+		}
+		function multiply(a, b) {
+			return (a * b);
+		}
+		function divide(a, b) {
+			return (a / b);
+		}
+
+		function operate(operation, a, b) {
+			return (operation(a, b));
+		}
+
+		// console.log(operate(subtract, 1, 2));
+
+		const screen = document.querySelector("#screen");
+		screen.textContent = "";
+
+		
+		// ---------------- GET & DISPLAY INPUT --------------------
+		
+
+		const buttons = document.querySelectorAll("button");
+		// console.log(buttons);
+		buttons.forEach(button => button.addEventListener("click", buttonClick));
+		
+		let input = [];
+		function buttonClick(e) {
+			if (e.target.textContent === "<<") {
+				screen.textContent = "";
+				input = [];
+			} else if (e.target.textContent === "=") {
+				parseInput();
+			} else {
+				screen.textContent += e.target.textContent;
+				input.push(e.target.textContent);
+			}
+		}
+		
+		// PARSE INPUT
+		function parseInput() {
+			let operands = [0, 0];
+			let operandIndex = 0;
+			let operator = "";
+
+			for (let i = 0; i < input.length; i++) {
+				// check if it's an operand, if so, store it
+				if (input[i] >= "0" && input[i] <= "9") {
+					operands[operandIndex] = operands[operandIndex] * 10 + parseInt(input[i]);
+				}
+				// it's an operator, and we don't have one yet, so:
+				else if (operator === "") {
+					// - store the operator
+					operator = input[i];
+					// - get ready to store a second operand
+					operandIndex++;
+				}
+				// it's an operator, but we already have one, so we have to:
+				else {
+					// - process the two operands we have and put the result in the first operand
+					operands[0] = processInput(operator, operands);
+					// - put the second operand back to 0
+					operands[1] = 0;
+					// - get ready to store a second operand
+					operandIndex = 1;
+					// store the new operator
+					operator = input[i];
+				}
+			}
+
+			// GET RESULT
+			operands[0] = processInput(operator, operands);
+			screen.textContent = operands[0];
+			operandIndex = 1;
+			operator = undefined;
+		}
+		
+		function processInput(operator, operands) {
+			// console.log(operands[0] + " " + operands[1]);
+			let result;
+			switch (operator) {
+				case "x":
+					result = operate(multiply, operands[0], operands[1]);
+					break ;
+				case "÷":
+					result = operate(divide, operands[0], operands[1]);
+					break ;
+				case "-":
+					result = operate(subtract, operands[0], operands[1]);
+					break ;
+				case "+":
+					result = operate(add, operands[0], operands[1]);
+					break ;
+			}
+			// console.log(result);
+			return (result);
+		}
+	</script>
+</body>
+</html>
