@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 	<link rel="stylesheet" type="text/css" href="calculator.css">
+	<!-- to silence favicon 404 error -->
+	<link rel="icon" href="data:;base64,iVBORw0KGgo="> 
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Document</title>
@@ -25,13 +27,16 @@
 			<button id="=">=</button>
 		</div>
 		<div id="buttons-other">
-			<button id="clear"><<</button>
-			<button id="÷">÷</button>
-			<button id="x">x</button>
+			<button id="c">c</button>
+			<button id="C">C</button>
+			<button id="/">/</button>
+			<button id="*">*</button>
 			<button id="-">-</button>
 			<button id="+">+</button>
 		</div>
 	</div>
+
+	<audio src="button-press.mp3"></audio>
 
 	<script>
 		// ------------------ MATH OPERATIONS ---------------------
@@ -54,49 +59,166 @@
 			return (operation(a, b));
 		}
 
-		// console.log(operate(subtract, 1, 2));
+
+		// ---------------- GET & DISPLAY INPUT --------------------
+
 
 		const screen = document.querySelector("#screen");
 		screen.textContent = "";
 		
-		// const screen2 = document.createElement("p");
-		// screen.appendChild(screen2);
-		// screen2.textContent = "test";
-
-		
-		// ---------------- GET & DISPLAY INPUT --------------------
-		
+		document.addEventListener("keydown", function(e) {
+			// console.log(e.key);
+			buttonClick(e);
+		});
 
 		const buttons = document.querySelectorAll("button");
 		// console.log(buttons);
 		buttons.forEach(
 			function(button) {
 				button.addEventListener("click", buttonClick);
+				button.addEventListener("transitionend", removeTransition);
 			}
 		)
+
+		function muteClickEvent(e) {
+			buttons.forEach(
+				function(button) {
+					if (button.textContent === ".") {
+						button.addEventListener("click", buttonClick);
+						button.setAttribute('listenerButtonClick', 'true');
+						console.log('listener attribute set to true');
+					}
+				}
+			)
+		}
+
+		function removeTransition(e) {
+			this.classList.remove("button-hit");
+		}
 		
+		function resizeOutputText() {
+			let length = screen.textContent.length;
+			// console.log(length);
+			screen.style.fontSize = `${38 - length}px`;
+		}
+
 		let currentOperand = "";
 		let storedOperand = "";
 		let operator = "";
-		let input = ""; // testing purposes
 
 		function buttonClick(e) {
-			if (e.target.getAttribute('listenerButtonClick') !== 'true') {
-				e.target.setAttribute('listenerButtonClick', 'true');
-				console.log('listener attribute set to true');
+			// check is key or button was pressed and store 
+			let btnPressed = (e.key) ? e.key : e.target.textContent;
+			
+			// check if btnPressed is a valid input
+			const validInput = [".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "/", "*", "-", "+", "=", "c", "C"];
+			if (!(validInput.includes(btnPressed))) {
+				return ;
 			}
 			
-			let btnPressed = e.target.textContent;
-			input += btnPressed;
-			console.log(input);
+			// initialize "." button's "listenerButtonClick" attribute to "true" so that we know the eventListener is active
+			if (btnPressed === "." && e.target.getAttribute("listenerButtonClick") === null) {
+				e.target.setAttribute("listenerButtonClick", "true");
+				console.log("listener attribute set to true(1)");
+			}
+
+			// The entire document DOM listens to "keydown" events. Because of this we can't shut off Just the "." keyboard input. Therefore we check the status of the "." button's "listenerButtonClick" attribute to check if "." is supposed to be allowed to be input or not.
+			let periodAllowed = true;
+			if (btnPressed === ".") {
+				buttons.forEach(function(button) {
+					if (button.textContent === "."
+					&& button.getAttribute("listenerButtonClick") === "false") {
+						periodAllowed = false;
+					}
+				})
+			}
+			if (periodAllowed === false) {
+				return ;
+			}
+
+			// play audio
+			const audio = document.querySelector("audio");
+			audio.currentTime = 0;
+			audio.play();
+
+			// add visual effect with css
+			document.getElementById(btnPressed).classList.add("button-hit");
+
+			
+			// CHECK WHICH BUTTON WAS PRESSED & DO STUFF
+
 
 			// clear screen and reset everything
-			if (btnPressed === "<<") {
+			if (btnPressed === "C") {
 				screen.textContent = "";
 				currentOperand = "";
 				storedOperand = "";
 				operator = "";
-				input = "";
+			}
+			
+			// clear last entry
+			else if (btnPressed === "c" && currentOperand !== "") {
+				currentOperand = currentOperand.slice(0, -1);
+				screen.textContent = screen.textContent.slice(0, -1);
+			}
+			
+			// result is requested
+			else if (btnPressed === "=") {
+				// if an operand is missing, return
+				if (storedOperand === "" || currentOperand === "" || operator === "") {
+					console.log("error: storedOperand = '" + storedOperand
+					+ "', currentOperand = '" + currentOperand + "', operator = '" + operator + "'");
+					return ;
+				}
+				// process input to get result and store result
+				storedOperand = getResult(operator, storedOperand, currentOperand);
+				// display result on screen
+				screen.textContent = storedOperand;
+				// get ready for new operand input
+				currentOperand = "";
+				operator = "";
+				muteClickEvent();
+			}
+
+			// an operator is input and we don't have one yet
+			else if (!(btnPressed >= "0" && btnPressed <= "9")
+			&& btnPressed !== "." && operator === "") {
+				// store the operator
+				operator = btnPressed;
+				// if an operand has already been given, get ready for another
+				if (currentOperand !== "") {
+					// get ready for new operand input
+					storedOperand = currentOperand;
+					currentOperand = "";
+					muteClickEvent();
+				}
+			}
+
+			// an operator is input, but we already have one
+			else if (!(btnPressed >= "0" && btnPressed <= "9")
+			&& btnPressed !== "." && operator !== "") {
+				// if an operand is missing, return
+				if (storedOperand === "" || currentOperand === "") {
+					operator = btnPressed;
+					console.log("error: storedOperand = '" + storedOperand
+					+ "', currentOperand = '" + currentOperand + "', operator = '" + operator + "'");
+					if (currentOperand !== "") {
+						// get ready for new operand input
+						storedOperand = currentOperand;
+						currentOperand = "";
+						muteClickEvent();
+					}
+					return ;
+				}
+				// prcss input to get result and store result
+				storedOperand = getResult(operator, storedOperand, currentOperand);
+				// display result on screen
+				screen.textContent = storedOperand;
+				// store given operator
+				operator = btnPressed;
+				// get ready for new operand input
+				currentOperand = "";
+				muteClickEvent();
 			}
 			
 			// operand is being given
@@ -105,6 +227,9 @@
 				// clear screen when a new operand is given
 				if (currentOperand === "") {
 					screen.textContent = "";
+				}
+				if (currentOperand.length >= 16) {
+					return ;
 				}
 				// store input in current operand
 				currentOperand += btnPressed;
@@ -124,98 +249,23 @@
 					)
 				}
 			}
-
-			// result is requested
-			else if (btnPressed === "=") {
-				// if an operand is missing, return
-				if (storedOperand === "" || currentOperand === "" || operator === "") {
-					console.log("error: storedOperand = '" + storedOperand
-					+ "', currentOperand = '" + currentOperand + "', operator = '" + operator + "'");
-					return ;
-				}
-				// process input to get result and store result
-				storedOperand = processInput(operator, storedOperand, currentOperand);
-				// display result on screen
-				screen.textContent = storedOperand;
-				// get ready for new operand input
-				currentOperand = "";
-				operator = "";
-				buttons.forEach(
-					function(button) {
-						if (button.textContent === ".") {
-							button.addEventListener("click", buttonClick);
-							button.setAttribute('listenerButtonClick', 'true');
-							console.log('listener attribute set to true');
-						}
-					}
-				)
-			}
-
-			// an operator is input and we don't have one yet
-			else if (operator === "") {
-				// store the operator
-				operator = btnPressed;
-				// if an operand has already been given, get ready for another
-				if (currentOperand !== "") {
-					storedOperand = currentOperand;
-					currentOperand = "";
-					buttons.forEach(
-						function(button) {
-							if (button.textContent === ".") {
-								button.addEventListener("click", buttonClick);
-								button.setAttribute('listenerButtonClick', 'true');
-								console.log('listener attribute set to true');
-							}
-						}
-					)
-				}
-			}
-
-			// an operator is input, but we already have one
-			else {
-				// if an operand is missing, return
-				if (storedOperand === "" || currentOperand === "") {
-					operator = btnPressed;
-					console.log("error: storedOperand = '" + storedOperand
-					+ "', currentOperand = '" + currentOperand + "', operator = '" + operator + "'");
-					return ;
-				}
-				// process input to get result and store result
-				storedOperand = processInput(operator, storedOperand, currentOperand);
-				// display result on screen
-				screen.textContent = storedOperand;
-				// store given operator
-				operator = btnPressed;
-				// get ready for new operand input
-				currentOperand = "";
-				buttons.forEach(
-					function(button) {
-						if (button.textContent === ".") {
-							button.addEventListener("click", buttonClick);
-							button.setAttribute('listenerButtonClick', 'true');
-							console.log('listener attribute set to true');
-						}
-					}
-				)
-			}
+			resizeOutputText();
 		}
 
 
-
-
-		
-		function processInput(operator, operand1, operand2) {
-			// console.log(operands[0] + " " + operands[1]);
-			
+		// ----------------- PROCESS INPUT ------------------
+		function getResult(operator, operand1, operand2) {
 			// convert strings to floats
 			let num1 = parseFloat(operand1);
 			let num2 = parseFloat(operand2);
+
 			let result;
+
 			switch (operator) {
-				case "x":
+				case "*":
 					result = operate(multiply, num1, num2);
 					break ;
-				case "÷":
+				case "/":
 					result = operate(divide, num1, num2);
 					break ;
 				case "-":
@@ -225,90 +275,9 @@
 					result = operate(add, num1, num2);
 					break ;
 			}
-			// console.log(result);
 			return (result);
 		}
 
-
-
-/*
-		let input = [];
-		function buttonClickOld(e) {
-			if (e.target.textContent === "<<") {
-				screen.textContent = "";
-				input = [];
-			} else if (e.target.textContent === "=") {
-				parseInput();
-			} else {
-				screen.textContent += e.target.textContent;
-				input.push(e.target.textContent);
-			}
-		}
-		
-		// PARSE INPUT
-		function parseInput() {
-			let operands = ["", ""];
-			let operandIndex = 0;
-			let operator = "";
-
-			for (let i = 0; i < input.length; i++) {
-				// check if it's (part of) an operand, if so, store it
-				if (input[i] >= "0" && input[i] <= "9"
-				|| input[i] === ".") {
-					operands[operandIndex] += input[i];
-				}
-				// it's an operator, and we don't have one yet, so:
-				else if (operator === "") {
-					// - store the operator
-					operator = input[i];
-					// - get ready to store a second operand
-					operandIndex++;
-				}
-				// it's an operator, but we already have one, so we have to:
-				else {
-					// - process the two operands we have and put the result in the first operand
-					operands[0] = processInput(operator, operands);
-					// - put the second operand back to 0
-					operands[1] = "";
-					// - get ready to store a second operand
-					operandIndex = 1;
-					// store the new operator
-					operator = input[i];
-				}
-			}
-
-			// GET RESULT
-			operands[0] = processInput(operator, operands);
-			screen.textContent = operands[0];
-			operandIndex = 1;
-			operator = undefined;
-		}
-		
-		function processInputOld(operator, operands) {
-			// console.log(operands[0] + " " + operands[1]);
-			
-			// convert strings to floats
-			let num1 = parseFloat(operands[0]);
-			let num2 = parseFloat(operands[1]);
-			let result;
-			switch (operator) {
-				case "x":
-					result = operate(multiply, num1, num2);
-					break ;
-				case "÷":
-					result = operate(divide, num1, num2);
-					break ;
-				case "-":
-					result = operate(subtract, num1, num2);
-					break ;
-				case "+":
-					result = operate(add, num1, num2);
-					break ;
-			}
-			// console.log(result);
-			return (result);
-		}
-		*/
 	</script>
 </body>
 </html>

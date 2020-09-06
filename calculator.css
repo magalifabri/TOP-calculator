@@ -9,7 +9,7 @@ body, html {
 	height: 100%;
 	display: grid;
 
-	background-color: rgb(226, 226, 226);
+	background-color: #d3c088;
 }
 
 /*  */
@@ -24,7 +24,8 @@ body, html {
 
 	/* graphical presentation */
 	padding: 20px;
-	background-color: rgb(255, 255, 255);
+	border-radius: 10px;
+	box-shadow: 3px 3px 10px 0px rgba(0, 0, 0, 0.712);
 
 	/* layout */
 	display: grid;
@@ -33,31 +34,83 @@ body, html {
 	grid-template-areas:
 		"screen screen"
 		"digits operators";
+	--gridGap: 5px;
+	grid-gap: var(--gridGap);
 }
 
 #screen {
 	grid-area: screen;
-	background-color: rgb(39, 39, 39);
 	
-	color: white;
 	font-family: 'Courier New', Courier, monospace;
-	/* font-size: 20px; */
+	font-size: 38px;
 	text-align: right;
 	/* font-weight: bold; */
-
+	height: 41px;
+	/* width: 240px; */
 	padding: 10px;
+	margin-bottom: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
 }
+
+button {
+	font-family: 'Courier New', Courier, monospace;
+	font-size: 30px;
+	outline: none;
+	border-radius: 10px;
+	transition: all .2s ease;
+	border-style: none;
+}
+
+.button-hit {
+	filter: brightness(85%);
+	font-size: 25px;
+	-moz-box-shadow:    inset 3px 3px 8px #000000b7;
+	-webkit-box-shadow: inset 3px 3px 8px #000000b7;
+	box-shadow:         inset 3px 3px 8px #000000b7;
+}
+
 
 #buttons-digits {
 	grid-area: digits;
-	background-color: gray;
 	display: grid;
+	grid-gap: var(--gridGap);
 	grid-template-columns: repeat(3, 1fr);
+	grid-template-rows: repeat(4, 1fr);
 }
+
 
 #buttons-other {
 	grid-area: operators;
 	display: grid;
-	grid-template-rows: repeat(5, 1fr);
+	grid-gap: var(--gridGap);
+	grid-template-rows: repeat(6, 1fr);
 }
 
+
+/* COLORS */
+
+#calculator {
+	background-color: #315659;
+}
+#screen {
+	background-color: #253031;
+	color: white;
+	font-size: 30px;
+}
+#buttons-digits button {
+	background-color: #49adb4;
+	color: white;
+}
+#buttons-other button {
+	background-color: #99dddd;
+}
+button#\= {
+	background-color: #96f0fa;
+	color: black;
+}
+button#C, button#c {
+	background-color: #688f92;
+	color: white;
+}
