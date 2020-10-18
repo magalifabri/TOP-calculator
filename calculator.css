@@ -10,6 +10,7 @@ body, html {
 	display: grid;
 
 	background-color: #d3c088;
+	background: linear-gradient(135deg, #d3c088, #b69775);
 }
 
 /*  */
@@ -44,9 +45,7 @@ body, html {
 	font-family: 'Courier New', Courier, monospace;
 	font-size: 38px;
 	text-align: right;
-	/* font-weight: bold; */
 	height: 41px;
-	/* width: 240px; */
 	padding: 10px;
 	margin-bottom: 10px;
 	display: flex;
@@ -71,7 +70,6 @@ button {
 	box-shadow:         inset 3px 3px 8px #000000b7;
 }
 
-
 #buttons-digits {
 	grid-area: digits;
 	display: grid;
@@ -79,7 +77,6 @@ button {
 	grid-template-columns: repeat(3, 1fr);
 	grid-template-rows: repeat(4, 1fr);
 }
-
 
 #buttons-other {
 	grid-area: operators;
@@ -95,7 +92,8 @@ button {
 	background-color: #315659;
 }
 #screen {
-	background-color: #253031;
+	/* background-color: #253031; */
+	background: linear-gradient(135deg, #2f3e3f 30%, #253031 40%);
 	color: white;
 	font-size: 30px;
 }
@@ -107,10 +105,14 @@ button {
 	background-color: #99dddd;
 }
 button#\= {
-	background-color: #96f0fa;
+	background-color: #99dddd;
 	color: black;
 }
 button#C, button#c {
 	background-color: #688f92;
 	color: white;
+}
+button[listenerbuttonclick=false] {
+	color:red!important;
+	border:1px solid red;
 }

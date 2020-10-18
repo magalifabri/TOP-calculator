@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 	<link rel="stylesheet" type="text/css" href="calculator.css">
+	<link href="https://fonts.googleapis.com/css?family=Orbitron:400,700" rel="stylesheet" type="text/css">
+
 	<!-- to silence favicon 404 error -->
 	<link rel="icon" href="data:;base64,iVBORw0KGgo="> 
 	<meta charset="UTF-8">
@@ -73,23 +75,19 @@
 
 		const buttons = document.querySelectorAll("button");
 		// console.log(buttons);
-		buttons.forEach(
-			function(button) {
-				button.addEventListener("click", buttonClick);
-				button.addEventListener("transitionend", removeTransition);
-			}
-		)
+		buttons.forEach(function(button) {
+			button.addEventListener("click", buttonClick);
+			button.addEventListener("transitionend", removeTransition);
+		})
 
-		function muteClickEvent(e) {
-			buttons.forEach(
-				function(button) {
-					if (button.textContent === ".") {
-						button.addEventListener("click", buttonClick);
-						button.setAttribute('listenerButtonClick', 'true');
-						console.log('listener attribute set to true');
-					}
+		function readdClickListener(e) {
+			buttons.forEach(function(button) {
+				if (button.textContent === ".") {
+					button.addEventListener("click", buttonClick);
+					button.setAttribute('listenerButtonClick', 'true');
+					console.log('listener attribute set to true');
 				}
-			)
+			})
 		}
 
 		function removeTransition(e) {
@@ -116,6 +114,9 @@
 				return ;
 			}
 			
+			const operators = ["/", "*", "-", "+"];
+			const operands = [".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
 			// initialize "." button's "listenerButtonClick" attribute to "true" so that we know the eventListener is active
 			if (btnPressed === "." && e.target.getAttribute("listenerButtonClick") === null) {
 				e.target.setAttribute("listenerButtonClick", "true");
@@ -147,24 +148,27 @@
 			
 			// CHECK WHICH BUTTON WAS PRESSED & DO STUFF
 
-
 			// clear screen and reset everything
 			if (btnPressed === "C") {
 				screen.textContent = "";
 				currentOperand = "";
 				storedOperand = "";
 				operator = "";
+				readdClickListener();
 			}
 			
 			// clear last entry
 			else if (btnPressed === "c" && currentOperand !== "") {
+				if (currentOperand[currentOperand.length - 1] === ".") {
+					readdClickListener();
+				}
 				currentOperand = currentOperand.slice(0, -1);
 				screen.textContent = screen.textContent.slice(0, -1);
 			}
 			
 			// result is requested
 			else if (btnPressed === "=") {
-				// if an operand is missing, return
+				// if an operand or the operator is missing, return
 				if (storedOperand === "" || currentOperand === "" || operator === "") {
 					console.log("error: storedOperand = '" + storedOperand
 					+ "', currentOperand = '" + currentOperand + "', operator = '" + operator + "'");
@@ -177,12 +181,13 @@
 				// get ready for new operand input
 				currentOperand = "";
 				operator = "";
-				muteClickEvent();
+				readdClickListener();
 			}
 
 			// an operator is input and we don't have one yet
-			else if (!(btnPressed >= "0" && btnPressed <= "9")
-			&& btnPressed !== "." && operator === "") {
+			// else if (!(btnPressed >= "0" && btnPressed <= "9")
+			// && btnPressed !== "." && operator === "") {
+			else if (operators.includes(btnPressed) && operator === "") {
 				// store the operator
 				operator = btnPressed;
 				// if an operand has already been given, get ready for another
@@ -190,13 +195,12 @@
 					// get ready for new operand input
 					storedOperand = currentOperand;
 					currentOperand = "";
-					muteClickEvent();
+					readdClickListener();
 				}
 			}
 
 			// an operator is input, but we already have one
-			else if (!(btnPressed >= "0" && btnPressed <= "9")
-			&& btnPressed !== "." && operator !== "") {
+			else if (operators.includes(btnPressed) && operator !== "") {
 				// if an operand is missing, return
 				if (storedOperand === "" || currentOperand === "") {
 					operator = btnPressed;
@@ -206,11 +210,11 @@
 						// get ready for new operand input
 						storedOperand = currentOperand;
 						currentOperand = "";
-						muteClickEvent();
+						readdClickListener();
 					}
 					return ;
 				}
-				// prcss input to get result and store result
+				// process input to get result and store result
 				storedOperand = getResult(operator, storedOperand, currentOperand);
 				// display result on screen
 				screen.textContent = storedOperand;
@@ -218,12 +222,11 @@
 				operator = btnPressed;
 				// get ready for new operand input
 				currentOperand = "";
-				muteClickEvent();
+				readdClickListener();
 			}
 			
 			// operand is being given
-			else if ((btnPressed >= "0" && btnPressed <= "9")
-			|| btnPressed === ".") {
+			else if (operands.includes(btnPressed)) {
 				// clear screen when a new operand is given
 				if (currentOperand === "") {
 					screen.textContent = "";
@@ -238,15 +241,13 @@
 				// if ".", disable it for the rest of this operand
 				// to do: add visual effect
 				if (btnPressed === ".") {
-					buttons.forEach(
-						function(button) {
-							if (button.textContent === ".") {
-								button.removeEventListener("click", buttonClick);
-								button.setAttribute('listenerButtonClick', 'false');
-								console.log('listener attribute set to false');
-							}
+					buttons.forEach(function(button) {
+						if (button.textContent === ".") {
+							button.removeEventListener("click", buttonClick);
+							button.setAttribute('listenerButtonClick', 'false');
+							console.log('listener attribute set to false');
 						}
-					)
+					})
 				}
 			}
 			resizeOutputText();
